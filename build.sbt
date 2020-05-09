@@ -21,8 +21,6 @@ lazy val refinedCirceWithNewtype =
         scalaTest
       ),
       scalacOptions ++= Seq(
-        "-encoding",
-        "utf8", // Option and arguments on same line
         "-Xfatal-warnings", // New lines for each options
         "-deprecation",
         "-unchecked",
@@ -32,7 +30,6 @@ lazy val refinedCirceWithNewtype =
         "-language:postfixOps",
         "-Ywarn-dead-code",
         "-Ywarn-numeric-widen",
-        "-Ywarn-value-discard",
         "-Xfatal-warnings",
         "-deprecation",
         "-Xlint:-unused,_",
@@ -42,3 +39,40 @@ lazy val refinedCirceWithNewtype =
         "200"
       )
     )
+
+lazy val processAnnotations = taskKey[Unit]("Process annotations")
+processAnnotations := {
+  val log = streams.value.log
+  log.info("Processing annotations ...")
+  val classpath = ((products in Compile).value ++ ((dependencyClasspath in Compile).value.files)) mkString ":"
+  val destinationDirectory = (classDirectory in Compile).value
+  val processor =
+    "picocli.codegen.aot.graalvm.processor.NativeImageConfigGeneratorProcessor"
+  val classesToProcess = Seq("com.github.takezoe.CheckSum") mkString " "
+  val command =
+    s"javac -cp $classpath -proc:only -processor $processor -XprintRounds -d $destinationDirectory $classesToProcess"
+  runCommand(command, "Failed to process annotations.", log)
+  log.info("Done processing annotations.")
+}
+def runCommand(command: String, message: => String, log: Logger) = {
+  import scala.sys.process._
+  val result = command.!
+  if (result != 0) {
+    log.error(message)
+    sys.error("Failed running command: " + command)
+  }
+}
+packageBin in Compile := (packageBin in Compile dependsOn (processAnnotations in Compile)).value
+lazy val sgit = (project in file("sgit"))
+  .settings(
+    scalaVersion := "2.13.1",
+    name := "sgit",
+    libraryDependencies ++= Seq(
+      "info.picocli" % "picocli" % "4.2.0",
+      "info.picocli" % "picocli-codegen" % "4.2.0" % "provided",
+      "org.ini4j" % "ini4j" % "0.5.4",
+      scalaTest
+    ),
+    trapExit := false
+  )
+  .enablePlugins(GraalVMNativeImagePlugin)
