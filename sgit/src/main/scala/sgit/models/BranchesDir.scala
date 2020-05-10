@@ -2,14 +2,14 @@ package sgit.models
 
 import java.nio.file.{Files, Path}
 
-object Branches {
+object BranchesDir {
   val DirName: String = "branches"
 
-  def init(gitDir: Path): Branches = {
+  def init(gitDir: Path): BranchesDir = {
     val dir = gitDir.resolve(DirName)
     Files.createDirectory(dir)
-    Branches(dir)
+    BranchesDir(dir)
   }
 }
 
-case class Branches(dir: Path)
+case class BranchesDir(dir: Path)

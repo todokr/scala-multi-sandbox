@@ -14,7 +14,7 @@ object Repository {
       throw new Exception("Not a Git repository")
     }
     val gitDir = workTree.resolve(".git")
-    val confPath = workTree.resolve("config")
+    val confPath = gitDir.resolve("config")
     val config = ConfigParser.parse(confPath)
     if (!config.isSupportedVersion) {
       throw new Exception(
@@ -37,12 +37,15 @@ object Repository {
     }
     Files.createDirectory(gitDir)
     val config = Config.init(gitDir)
-    Branches.init(gitDir)
-    Objects.init(gitDir)
-    Refs.init(gitDir)
+    BranchesDir.init(gitDir)
+    ObjectsDir.init(gitDir)
+    RefsDir.init(gitDir)
 
     Repository(workTree, gitDir, config)
   }
 }
 
-case class Repository(workTree: Path, gitDir: Path, config: Config)
+case class Repository(workTree: Path, gitDir: Path, config: Config) {
+
+  val objectsDir: Path = gitDir.resolve(ObjectsDir.DirName)
+}

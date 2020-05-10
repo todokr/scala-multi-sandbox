@@ -4,8 +4,9 @@ import java.nio.file.{Path, Paths}
 import java.util.Locale
 
 import picocli.CommandLine
-import picocli.CommandLine.{Command, HelpCommand, Parameters}
-import sgit.subcommands.InitCommand
+import picocli.CommandLine.{Command, HelpCommand, Option, Parameters}
+import sgit.models.Repository
+import sgit.subcommands.{CatFileCommand, HashObjectCommand, InitCommand}
 
 @Command(
   name = "sgit",
@@ -15,7 +16,7 @@ import sgit.subcommands.InitCommand
   description = Array("A toy git")
 )
 class Main extends Runnable {
-  val executingPath: Path = Paths.get(".").toAbsolutePath
+  val executingPath: Path = Paths.get("").toAbsolutePath
 
   @CommandLine.Spec
   val spec: CommandLine.Model.CommandSpec = null
@@ -29,10 +30,51 @@ class Main extends Runnable {
     @Parameters(index = "0", defaultValue = ".") targetDir: Path
   ): Unit = {
     val workTree = executingPath.resolve(targetDir).normalize()
-    println(workTree)
     InitCommand.run(workTree)
   }
 
+  @Command(
+    name = "cat-file",
+    description = Array(
+      "Provide content or type and size information for repository objects"
+    )
+  )
+  def catFile(
+    @Option(
+      names = Array("-t"),
+      defaultValue = "blob",
+      description = Array("Specify the type")
+    )
+    objectType: String,
+    @Parameters(index = "0", description = Array("The object to display"))
+    hash: String
+  ): Unit = {
+    CatFileCommand.run(objectType, hash, executingPath)
+  }
+
+  @Command(
+    name = "hash-object",
+    description =
+      Array("Compute object ID and optionally creates a blob from a file")
+  )
+  def hashObject(
+    @Option(
+      names = Array("-w"),
+      description = Array("Actually write the object into the database")
+    )
+    isWrite: Boolean,
+    @Option(
+      names = Array("-t"),
+      defaultValue = "blob",
+      description = Array("Specify the type")
+    )
+    objectType: String,
+    @Parameters(index = "0", description = Array("Read object from <file>"))
+    file: Path
+  ): Unit = {
+    val repository = Repository.load(executingPath)
+    HashObjectCommand.run(isWrite, objectType, file, repository)
+  }
   @Command(
     name = "language",
     description =
