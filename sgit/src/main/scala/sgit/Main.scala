@@ -40,16 +40,22 @@ class Main extends Runnable {
     )
   )
   def catFile(
+    @Option(names = Array("-t"), description = Array("Show object type"))
+    showType: Boolean,
     @Option(
-      names = Array("-t"),
-      defaultValue = "blob",
-      description = Array("Specify the type")
+      names = Array("-p"),
+      description = Array("Pretty-print object's content")
     )
-    objectType: String,
+    prettyPrint: Boolean,
     @Parameters(index = "0", description = Array("The object to display"))
     hash: String
   ): Unit = {
-    CatFileCommand.run(objectType, hash, executingPath)
+    CatFileCommand.run(
+      showType = showType,
+      prettyPrint = prettyPrint,
+      hash = hash,
+      executingPath = executingPath
+    )
   }
 
   @Command(
