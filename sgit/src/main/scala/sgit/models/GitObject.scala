@@ -10,18 +10,47 @@ object GitObject {
 
   def deserialize(data: Iterator[Byte]): GitObject = {
     val objectType = data.takeWhile(_ != ' ').toArray.pipe(new String(_))
+    data.takeWhile(_ != 0x00).toArray.pipe(new String(_).toInt) // データサイズは捨てる
     objectType match {
-      case "commit" => GitCommit()
-      case "tree"   => GitTree()
-      case "tag"    => GitTag()
-      case "blob"   => GitBlob(data.takeWhile(_ != -1).toArray)
-      case x        => throw new Exception(s"Unknown type $x for object")
+      case "commit" =>
+        GitCommit.parse(data.takeWhile(_ != -1).toArray.pipe(new String(_)))
+      case "tree" => GitTree()
+      case "tag"  => GitTag()
+      case "blob" => GitBlob.of(data.takeWhile(_ != -1).toArray)
+      case x      => throw new Exception(s"Unknown type $x for object")
     }
   }
 }
-case class GitCommit() extends GitObject("commit") {
+case class GitCommit(tree: String,
+                     parent: String,
+                     author: String,
+                     committer: String,
+                     message: String)
+    extends GitObject("commit") {
   override def serialize: Array[Byte] = ???
 }
+
+object GitCommit {
+  private val CommitRegex =
+    """(?s)^tree ([a-z0-9]+)$
+      |^parent ([a-z0-9]+)$
+      |^author (.+) <.+>$
+      |^committer (.+) <.+>$
+      |^$
+      |^(.*)$""".r
+
+  def parse(content: String): GitCommit = {
+    content match {
+      case CommitRegex(tree, parent, author, committer, content) =>
+        GitCommit(tree, parent, author, committer, content)
+      case x =>
+        println(x)
+        throw new Exception("boom")
+    }
+  }
+}
+
+case class Person(name: String, email: String)
 
 case class GitTree() extends GitObject("tree") {
   override def serialize: Array[Byte] = ???
@@ -33,4 +62,8 @@ case class GitTag() extends GitObject("tag") {
 
 case class GitBlob(blobData: Array[Byte]) extends GitObject("blob") {
   override def serialize: Array[Byte] = blobData
+}
+
+object GitBlob {
+  def of(data: Array[Byte]): GitBlob = GitBlob(data)
 }

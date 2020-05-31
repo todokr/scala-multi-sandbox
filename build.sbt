@@ -71,6 +71,7 @@ lazy val sgit = (project in file("sgit"))
       "info.picocli" % "picocli" % "4.2.0",
       "info.picocli" % "picocli-codegen" % "4.2.0" % "provided",
       "org.ini4j" % "ini4j" % "0.5.4",
+      "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
       "commons-codec" % "commons-codec" % "1.14",
       scalaTest
     ),

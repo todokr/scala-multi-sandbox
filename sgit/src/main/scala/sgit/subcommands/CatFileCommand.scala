@@ -1,6 +1,5 @@
 package sgit.subcommands
 
-import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
 import java.util.zip.InflaterInputStream
 
@@ -31,7 +30,7 @@ object CatFileCommand {
       println(gitObject.typeName)
     } else if (prettyPrint) {
       val content =
-        gitObject.serialize.pipe(new String(_, StandardCharsets.UTF_8))
+        gitObject.serialize.pipe(new String(_))
       println(content)
     }
 
