@@ -24,14 +24,14 @@ object GitObject {
   }
 }
 case class GitCommit(tree: String,
-                     parent: String,
+                     parent: Option[String],
                      author: String,
                      committer: String,
                      message: String)
     extends GitObject("commit") {
   override def serialize: Array[Byte] =
     s"""tree $tree
-       |parent $parent
+       |parent ${parent.getOrElse("-")}
        |author $author
        |committer $committer
        |

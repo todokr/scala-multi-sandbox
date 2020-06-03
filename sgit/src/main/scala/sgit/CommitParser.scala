@@ -12,10 +12,16 @@ object CommitParser {
       content.split("\n").toList
     TreePattern.findFirstMatchIn(treeLine).map(_.group(1))
     GitCommit(
-      tree = extract(treeLine, TreePattern),
-      parent = extract(parentLine, ParentPattern),
-      author = extract(authorLine, AuthorPattern),
-      committer = extract(committerLine, CommitterPattern),
+      tree = extractOption(treeLine, TreePattern).getOrElse(
+        throw new Exception(s"Illegal commit format. tree not found")
+      ),
+      parent = extractOption(parentLine, ParentPattern),
+      author = extractOption(authorLine, AuthorPattern).getOrElse(
+        throw new Exception(s"Illegal commit format. author not found")
+      ),
+      committer = extractOption(committerLine, CommitterPattern).getOrElse(
+        throw new Exception(s"Illegal commit format. committer not found")
+      ),
       message = messageLines.mkString("\n")
     )
   }
@@ -25,9 +31,8 @@ object CommitParser {
   private val AuthorPattern: Regex = """author ([^<]+)""".r
   private val CommitterPattern: Regex = """committer ([^<]+)""".r
 
-  private def extract(input: String, pattern: Regex): String =
+  private def extractOption(input: String, pattern: Regex): Option[String] =
     pattern
       .findFirstMatchIn(input)
       .map(_.group(1).trim)
-      .getOrElse(throw new Exception(s"not match pattern. input: $input"))
 }
