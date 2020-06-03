@@ -1,5 +1,8 @@
 package sgit.models
 
+import java.nio.file.{Files, Path}
+import java.util.zip.InflaterInputStream
+
 import scala.util.chaining._
 
 import sgit.CommitParser
@@ -36,9 +39,25 @@ case class GitCommit(tree: String,
        |committer $committer
        |
        |$message""".stripMargin.getBytes
-}
 
-case class Person(name: String, email: String)
+  def resolveParent(objectsPath: Path): Option[GitCommit] =
+    parent.flatMap { p =>
+      val (dir, file) = p.splitAt(2)
+      val parentPath = objectsPath.resolve(dir).resolve(file)
+      if (!Files.exists(parentPath)) {
+        None
+      } else {
+        val is = new InflaterInputStream(Files.newInputStream(parentPath))
+        val data = Iterator.continually(is.read()).map(_.toByte)
+        val commit = GitObject.deserialize(data) match {
+          case c: GitCommit => Some(c)
+          case _            => None
+        }
+        is.close()
+        commit
+      }
+    }
+}
 
 case class GitTree() extends GitObject("tree") {
   override def serialize: Array[Byte] = ???

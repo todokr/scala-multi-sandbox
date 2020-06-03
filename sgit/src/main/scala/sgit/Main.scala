@@ -6,7 +6,12 @@ import java.util.Locale
 import picocli.CommandLine
 import picocli.CommandLine.{Command, HelpCommand, Option, Parameters}
 import sgit.models.Repository
-import sgit.subcommands.{CatFileCommand, HashObjectCommand, InitCommand}
+import sgit.subcommands.{
+  CatFileCommand,
+  HashObjectCommand,
+  InitCommand,
+  LogCommand
+}
 
 @Command(
   name = "sgit",
@@ -81,6 +86,12 @@ class Main extends Runnable {
     val repository = Repository.load(executingPath)
     HashObjectCommand.run(isWrite, objectType, file, repository)
   }
+
+  @Command(name = "log", description = Array("Shows the commit logs."))
+  def log(): Unit = {
+    LogCommand.run(executingPath)
+  }
+
   @Command(
     name = "language",
     description =

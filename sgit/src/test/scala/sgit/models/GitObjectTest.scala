@@ -18,7 +18,7 @@ class GitObjectTest extends AnyFunSuite {
     val actual = GitObject.deserialize(data)
     val expected = GitCommit(
       tree = "e6459a6cee9fdbaf87519ebc92b8a1514e7fc04c",
-      parent = "ad30b19eeef5ffb510b2a5773c4c572e9f509f8e",
+      parent = Some("ad30b19eeef5ffb510b2a5773c4c572e9f509f8e"),
       author = "todokr",
       committer = "todokr",
       message = "refine cat-file command"
