@@ -34,15 +34,16 @@ object LogCommand {
       case _            => throw new Exception("not a commit object")
     }
 
-    def _loop(current: GitCommit, acc: List[GitCommit] = Nil): List[GitCommit] =
-      current.resolveParent(objectsPath) match {
-        case Some(parent) => _loop(parent, parent :: acc)
+    def _loop(acc: List[GitCommit]): List[GitCommit] =
+      acc.head.resolveParent(objectsPath) match {
+        case Some(parent) => _loop(parent :: acc)
         case None         => acc
       }
     val serializedCommits =
-      _loop(commitObject).map(_.serialize.pipe(new String(_)))
+      _loop(List(commitObject)).map(_.serialize.pipe(new String(_))).reverse
 
     val pretty = serializedCommits.mkString(s"\n${"-" * 80}\n")
+    println(s"\n${"-" * 80}")
     println(pretty)
   }
 }
