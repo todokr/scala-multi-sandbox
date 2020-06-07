@@ -10,7 +10,8 @@ import sgit.subcommands.{
   CatFileCommand,
   HashObjectCommand,
   InitCommand,
-  LogCommand
+  LogCommand,
+  LsTreeCommand
 }
 
 @Command(
@@ -90,6 +91,17 @@ class Main extends Runnable {
   @Command(name = "log", description = Array("Shows the commit logs."))
   def log(): Unit = {
     LogCommand.run(executingPath)
+  }
+
+  @Command(
+    name = "ls-tree",
+    description = Array("List the contents of a tree object")
+  )
+  def lsTree(
+    @Parameters(index = "0", description = Array("Id of a tree-ish"))
+    hash: String
+  ): Unit = {
+    LsTreeCommand.run(executingPath, hash)
   }
 
   @Command(

@@ -5,7 +5,7 @@ import java.util.zip.InflaterInputStream
 
 import scala.util.chaining._
 
-import sgit.CommitParser
+import sgit.{CommitParser, TreeParser}
 
 sealed abstract class GitObject(val typeName: String) {
   def serialize: Array[Byte]
@@ -15,14 +15,17 @@ object GitObject {
 
   def deserialize(data: Iterator[Byte]): GitObject = {
     val objectType = data.takeWhile(_ != ' ').toArray.pipe(new String(_))
-    data.takeWhile(_ != 0x00).toArray.pipe(new String(_).toInt) // データサイズは捨てる
+    val content = data.takeWhile(_ != -1).toArray
+    data
+      .takeWhile(_ != 0x00)
+      .toArray
+      .pipe(new String(_).toInt) // データサイズは捨てる
     objectType match {
-      case "commit" =>
-        CommitParser.parse(data.takeWhile(_ != -1).toArray.pipe(new String(_)))
-      case "tree" => GitTree()
-      case "tag"  => GitTag()
-      case "blob" => GitBlob.of(data.takeWhile(_ != -1).toArray)
-      case x      => throw new Exception(s"Unknown type $x for object")
+      case "commit" => CommitParser.parse(new String(content))
+      case "tree"   => TreeParser.parseOne(content)._1
+      case "tag"    => GitTag()
+      case "blob"   => GitBlob.of(content)
+      case x        => throw new Exception(s"Unknown type $x for object")
     }
   }
 }
@@ -59,8 +62,10 @@ case class GitCommit(tree: String,
     }
 }
 
-case class GitTree() extends GitObject("tree") {
-  override def serialize: Array[Byte] = ???
+case class GitTree(mode: String, path: String, hash: String)
+    extends GitObject("tree") {
+  def pretty: String = s"$mode $path $hash"
+  override def serialize: Array[Byte] = pretty.getBytes
 }
 
 case class GitTag() extends GitObject("tag") {
